@@ -16,6 +16,7 @@
 
 package com.slim.device.settings;
 
+import android.app.ActionBar;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -23,6 +24,7 @@ import android.os.SystemProperties;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.SwitchPreference;
+import android.view.MenuItem;
 
 import com.slim.device.KernelControl;
 import com.slim.device.R;
@@ -61,6 +63,11 @@ public class SliderSettings extends PreferenceActivity
         if( mSpectrum != null ) {
             mSpectrum.setValue(SystemProperties.get(SPECTRUM_SYSTEM_PROPERTY, "0"));
             mSpectrum.setOnPreferenceChangeListener(this);
+	}
+
+        ActionBar actionBar = getActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
 
@@ -115,5 +122,16 @@ public class SliderSettings extends PreferenceActivity
         setSummary(mSliderTop, KernelControl.KEYCODE_SLIDER_TOP);
         setSummary(mSliderMiddle, KernelControl.KEYCODE_SLIDER_MIDDLE);
         setSummary(mSliderBottom, KernelControl.KEYCODE_SLIDER_BOTTOM);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
