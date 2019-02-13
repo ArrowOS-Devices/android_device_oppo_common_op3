@@ -207,19 +207,27 @@ public class KeyHandler implements DeviceKeyHandler {
     }
 
     public KeyEvent handleKeyEvent(KeyEvent event) {
+	int scanCode = event.getScanCode();
         if (event.getAction() != KeyEvent.ACTION_UP) {
             return event;
         }
-        int scanCode = event.getScanCode();
-        boolean isKeySupported = ArrayUtils.contains(sSupportedGestures, scanCode);
-        if (isKeySupported && !mEventHandler.hasMessages(GESTURE_REQUEST)) {
-            Message msg = getMessageForKeyEvent(event);
-            if (scanCode < MODE_TOTAL_SILENCE && mProximitySensor != null) {
-                mEventHandler.sendMessageDelayed(msg, 200);
-                processEvent(event);
-            } else {
-                mEventHandler.sendMessage(msg);
-            }
+
+        // In case we're too fast: possibly loose contact in hw button?
+        // -> discard previous, apply last update
+        mEventHandler.removeMessages(GESTURE_REQUEST);
+
+        Message msg;
+        if (scanCode != event.getScanCode()) {
+            // Overwritten action
+            msg = getMessageForScanCode(scanCode);
+        } else {
+            msg = getMessageForKeyEvent(event);
+        }
+        if (scanCode < MODE_VIBRATION && mProximitySensor != null) {
+            mEventHandler.sendMessageDelayed(msg, 200);
+            processEvent(event);
+        } else {
+            mEventHandler.sendMessage(msg);
         }
         return event;
     }
@@ -227,6 +235,12 @@ public class KeyHandler implements DeviceKeyHandler {
     private Message getMessageForKeyEvent(KeyEvent keyEvent) {
         Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
         msg.obj = keyEvent;
+        return msg;
+    }
+
+    private Message getMessageForScanCode(int scanCode) {
+        Message msg = mEventHandler.obtainMessage(GESTURE_REQUEST);
+        msg.obj = new Integer(scanCode);
         return msg;
     }
 
